@@ -2,11 +2,12 @@ import { NextResponse } from 'next/server';
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
-  const vehicleNumber = searchParams.get('v');
+  const vNo = searchParams.get('v');
 
-  if (!vehicleNumber) return new Response("Missing Vehicle Number", { status: 400 });
+  if (!vNo) return new Response("Error: No vehicle number provided in URL", { status: 400 });
 
   try {
+    // HARDCODED KEYS FOR EMERGENCY DEPLOY
     const API_KEY = 'ATNBjtgYLALbttpXYfdJGCPofTihtTBCvupaibsfCMEuFZcPGUdLTzkujozKLLbA';
     const TEMPLATE_ID = '5556934326484992';
     const auth = Buffer.from(`${API_KEY}:`).toString('base64');
@@ -17,15 +18,18 @@ export async function GET(req: Request) {
         'Authorization': `Basic ${auth}`,
         'Content-Type': 'application/json',
       },
+      // Sending the vehicle number to BOTH fields just in case your template needs both
       body: JSON.stringify({
         values: {
-          "vehicleNumber": vehicleNumber 
+          "vehicleNumber": vNo,
+          "fuelCode": vNo 
         }
       }),
     });
 
     if (!response.ok) {
-      return new Response("PassSlot API Error. Check your Template ID or Field Tags.", { status: 500 });
+      const errorText = await response.text();
+      return new Response(`PassSlot Rejected: ${errorText}`, { status: 500 });
     }
 
     const buffer = await response.arrayBuffer();
@@ -33,10 +37,10 @@ export async function GET(req: Request) {
     return new Response(buffer, {
       headers: {
         'Content-Type': 'application/vnd.apple.pkpass',
-        'Content-Disposition': `attachment; filename="FuelPass_${vehicleNumber}.pkpass"`,
+        'Content-Disposition': `attachment; filename="FuelPass_${vNo}.pkpass"`,
       },
     });
-  } catch (e) {
-    return new Response("Server Crash", { status: 500 });
+  } catch (e: any) {
+    return new Response(`Server Error: ${e.message}`, { status: 500 });
   }
 }
