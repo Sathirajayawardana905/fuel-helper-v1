@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server';
 
-export async function POST(req: Request) {
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const vehicleNumber = searchParams.get('v');
+
+  if (!vehicleNumber) return new Response("Missing Vehicle Number", { status: 400 });
+
   try {
-    const { vehicleNumber } = await req.json();
-    
-    // PRODUCTION KEYS - HARDCODED FOR MIDNIGHT DEPLOY
     const API_KEY = 'ATNBjtgYLALbttpXYfdJGCPofTihtTBCvupaibsfCMEuFZcPGUdLTzkujozKLLbA';
     const TEMPLATE_ID = '5556934326484992';
     const auth = Buffer.from(`${API_KEY}:`).toString('base64');
@@ -23,19 +25,18 @@ export async function POST(req: Request) {
     });
 
     if (!response.ok) {
-      const errRes = await response.text();
-      return NextResponse.json({ error: errRes }, { status: 500 });
+      return new Response("PassSlot API Error. Check your Template ID or Field Tags.", { status: 500 });
     }
 
     const buffer = await response.arrayBuffer();
 
-    return new NextResponse(buffer, {
+    return new Response(buffer, {
       headers: {
         'Content-Type': 'application/vnd.apple.pkpass',
-        'Content-Disposition': 'attachment; filename="fuelpass.pkpass"',
+        'Content-Disposition': `attachment; filename="FuelPass_${vehicleNumber}.pkpass"`,
       },
     });
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+  } catch (e) {
+    return new Response("Server Crash", { status: 500 });
   }
 }
