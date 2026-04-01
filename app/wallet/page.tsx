@@ -64,13 +64,6 @@ export default function WalletPage() {
             value={vehicleNumber}
             onChange={(e) => setVehicleNumber(e.target.value)}
           />
-          <input 
-            type="text" 
-            placeholder="PASTE QR CODE DATA HERE"
-            className="w-full bg-white/5 border border-white/10 p-4 rounded-xl text-white text-xs uppercase font-bold outline-none focus:border-red-600"
-            value={fuelCode}
-            onChange={(e) => setFuelCode(e.target.value)}
-          />
         </div>
 
         <button 
