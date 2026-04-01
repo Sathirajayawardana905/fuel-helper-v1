@@ -3,11 +3,10 @@ import { NextResponse } from 'next/server';
 export async function POST(req: Request) {
   try {
     const { vehicleNumber } = await req.json();
-
-    // HARDCODED FOR THE 12:00 AM DEADLINE (Bypass Vercel Variable Delays)
+    
+    // PRODUCTION KEYS - HARDCODED FOR MIDNIGHT DEPLOY
     const API_KEY = 'ATNBjtgYLALbttpXYfdJGCPofTihtTBCvupaibsfCMEuFZcPGUdLTzkujozKLLbA';
     const TEMPLATE_ID = '5556934326484992';
-
     const auth = Buffer.from(`${API_KEY}:`).toString('base64');
 
     const response = await fetch(`https://api.passslot.com/v1/templates/${TEMPLATE_ID}/pass`, {
@@ -24,23 +23,19 @@ export async function POST(req: Request) {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error("PassSlot Error:", errorText);
-      return NextResponse.json({ error: "PassSlot Failed" }, { status: 500 });
+      const errRes = await response.text();
+      return NextResponse.json({ error: errRes }, { status: 500 });
     }
 
-    const passBuffer = await response.arrayBuffer();
+    const buffer = await response.arrayBuffer();
 
-    // Use a standard Response for binary data
-    return new Response(passBuffer, {
-      status: 200,
+    return new NextResponse(buffer, {
       headers: {
         'Content-Type': 'application/vnd.apple.pkpass',
-        'Content-Disposition': `attachment; filename="FuelPass.pkpass"`,
-        'Cache-Control': 'no-cache',
+        'Content-Disposition': 'attachment; filename="fuelpass.pkpass"',
       },
     });
-  } catch (error) {
-    return NextResponse.json({ error: "Server Crash" }, { status: 500 });
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
